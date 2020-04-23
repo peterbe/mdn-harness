@@ -54,26 +54,17 @@ async function downloadAssets(url, folder, logger) {
       //
       // These payloads will already be part of the downloaded .css file
       // anyway.
+      logger.debug(`Ignoring image: ${responseUrl.slice(0, 100)}`);
       return;
     }
     logger.debug(`${responseUrl}: ${response.status()} (${resourceType})`);
-    if (true || resourceType === "stylesheet") {
-      const payload = await response.buffer();
-      // const payload = await response.text();
-      // logger.info(`${(payload.length / 1024).toFixed(1)}KB`);
-      assetsDownloaded[responseUrl] = await savePayload(
-        payload,
-        responseUrl,
-        folder,
-        logger
-      );
-    }
-    // const url = new URL(response.url());
-    // let filePath = path.resolve(`./output${url.pathname}`);
-    // if (path.extname(url.pathname).trim() === '') {
-    //   filePath = `${filePath}/index.html`;
-    // }
-    // await fse.outputFile(filePath, await response.buffer());
+    const payload = await response.buffer();
+    assetsDownloaded[responseUrl] = await savePayload(
+      payload,
+      responseUrl,
+      folder,
+      logger
+    );
   });
   page.on("request", (request) => {
     // console.log(`Intercepting: ${request.method} ${request.url}`);
@@ -90,8 +81,8 @@ async function downloadAssets(url, folder, logger) {
       logger.info(`Skipping URL: ${request.url()}`);
       request.abort();
     } else {
-      request.continue();
       logger.debug("Noticing request for", request.url());
+      request.continue();
     }
   });
 
@@ -143,66 +134,116 @@ async function main(url, options, logger) {
   function fixCSS(css) {
     function replacer(match, uri) {
       if (uri.startsWith("data:image")) return match;
+
+      if (match.includes("dino-happy")) {
+        console.log("WHAT!!!!", match, uri);
+      }
+
       const absoluteUri = new URL(uri, url).toString();
       const savedPath = assetsDownloaded[absoluteUri];
+      if (match.includes("dino-happy")) {
+        console.log({ savedPath }, "FIXED:", match.replace(uri, savedPath));
+      }
       if (savedPath) {
-        logger.debug(`Fixed CSS URL ${uri} (in ${match})`);
+        logger.info(
+          `Fixed CSS URL ${uri} (in ${match}) BECAME ${match.replace(
+            uri,
+            savedPath
+          )}`
+        );
+        // return match;
         return match.replace(uri, savedPath);
       }
-      logger.debug(`BAIL on CSS URL ${uri} (in ${match})`);
+      logger.info(`BAIL on CSS URL ${uri} (in ${match})`);
       return match;
     }
     return css.replace(/url\(["']?(.*?)["']?\)/g, replacer);
   }
 
   const $ = cheerio.load(html);
-  $("script,link,img,iframe").each((i, element) => {
+
+  // puppeteer doesn't download the favicons, so deal with that manually.
+  $('link[rel="shortcut icon"],link[rel="apple-touch-icon-precomposed"]').each(
+    async (i, element) => {
+      const $element = $(element);
+      let uri = $element.attr("href");
+      const absoluteUri = new URL(uri, url).toString();
+      logger.info(`Download favicon ${absoluteUri}`);
+      const response = await fetch(absoluteUri);
+      if (!response.ok) {
+        throw new Error(
+          `Unable to download ${absoluteUri}: ${response.status}`
+        );
+      }
+      const payload = await response.text();
+      await savePayload(payload, absoluteUri, destination, logger);
+    }
+  );
+
+  // $("script,link,img,iframe").each((i, element) => {
+  //   const $element = $(element);
+  //   let uri;
+  //   if (
+  //     element.tagName === "script" ||
+  //     element.tagName === "image" ||
+  //     element.tagName === "iframe"
+  //   ) {
+  //     uri = $element.attr("src");
+  //     if (uri) {
+  //       const savedPath = getDownloadedAsset(uri);
+  //       if (savedPath) {
+  //         $element.attr("src", savedPath);
+  //         logger.info(`Changed HTML for ${uri}`);
+  //       }
+  //     }
+  //   } else if (element.tagName === "link") {
+  //     uri = $element.attr("href");
+  //     if (uri) {
+  //       const savedPath = getDownloadedAsset(uri);
+  //       if (savedPath) {
+  //         $element.attr("href", savedPath);
+  //         logger.info(`Changed HTML for ${uri}`);
+  //       }
+  //     }
+  //   } else {
+  //     throw new Error(`DON'T KNOW HOW TO DEAL WITH '${element.tagName}'!`);
+  //   }
+  // });
+  $("iframe").each((i, element) => {
     const $element = $(element);
     let uri;
-    if (
-      element.tagName === "script" ||
-      element.tagName === "image" ||
-      element.tagName === "iframe"
-    ) {
-      uri = $element.attr("src");
-      if (uri) {
-        const savedPath = getDownloadedAsset(uri);
-        if (savedPath) {
-          $element.attr("src", savedPath);
-          logger.info(`Changed HTML for ${uri}`);
-        }
+    uri = $element.attr("src");
+    if (uri) {
+      const savedPath = getDownloadedAsset(uri);
+      if (savedPath) {
+        $element.attr("src", savedPath);
+        logger.info(`Changed HTML for ${uri}`);
       }
-    } else if (element.tagName === "link") {
-      uri = $element.attr("href");
-      if (uri) {
-        const savedPath = getDownloadedAsset(uri);
-        if (savedPath) {
-          $element.attr("href", savedPath);
-          logger.info(`Changed HTML for ${uri}`);
-        }
-      }
-    } else {
-      throw new Error(`DON'T KNOW HOW TO DEAL WITH '${element.tagName}'!`);
     }
   });
 
-  $("style").each((i, element) => {
-    // Need to fix all inline stylesheets that might look something
-    // like this:
-    //
-    //    @font-face {
-    //      font-family: zillaslab;
-    //      font-display: swap;
-    //      src: url(/static/fonts/locales/ZillaSlab-Regular.subset.bbc33fb47cf6.woff2) format('woff2'),
-    //           url(/static/fonts/locales/ZillaSlab-Regular.subset.0357f12613a7.woff) format('woff');
-    //
-    const $element = $(element);
-    const initialCss = $element.text();
-    const fixedCss = fixCSS(initialCss);
-    if (fixedCss !== initialCss) {
-      $element.text(fixedCss);
-    }
-  });
+  // $("style").each((i, element) => {
+  //   // Need to fix all inline stylesheets that might look something
+  //   // like this:
+  //   //
+  //   //    @font-face {
+  //   //      font-family: zillaslab;
+  //   //      font-display: swap;
+  //   //      src: url(/static/fonts/locales/ZillaSlab-Regular.subset.bbc33fb47cf6.woff2) format('woff2'),
+  //   //           url(/static/fonts/locales/ZillaSlab-Regular.subset.0357f12613a7.woff) format('woff');
+  //   //
+  //   const $element = $(element);
+  //   const initialCss = $element.text();
+  //   const fixedCss = fixCSS(initialCss);
+  //   if (fixedCss !== initialCss) {
+  //     console.log("CSS BEFORE_______________________________________");
+  //     console.log(initialCss);
+  //     console.log("CSS AFTER_______________________________________");
+  //     console.log(fixedCss);
+  //     console.log("\n");
+  //     $element.text(fixedCss);
+  //   }
+  // });
   const htmlFile = path.join(destination, "index.html");
   fs.writeFileSync(htmlFile, $.html());
   logger.info(`Downloaded ${htmlFile} (${showFileSize(htmlFile)})`);
@@ -211,16 +252,16 @@ async function main(url, options, logger) {
   fs.writeFileSync(assetsFile, JSON.stringify(assetsDownloaded, null, 2));
   logger.info(`Record of all downloaded assets in ${assetsFile}`);
 
-  Object.values(assetsDownloaded)
-    .filter((v) => path.basename(v).endsWith(".css"))
-    .forEach((cssFile) => {
-      const initialCss = fs.readFileSync(cssFile, "utf8");
-      const fixedCss = fixCSS(initialCss);
-      if (fixedCss !== initialCss) {
-        logger.info(`Fixed some local url(...) reference in ${cssFile}`);
-        fs.writeFileSync(cssFile, fixedCss);
-      }
-    });
+  // Object.values(assetsDownloaded)
+  //   .filter((v) => path.basename(v).endsWith(".css"))
+  //   .forEach((cssFile) => {
+  //     const initialCss = fs.readFileSync(cssFile, "utf8");
+  //     const fixedCss = fixCSS(initialCss);
+  //     if (fixedCss !== initialCss) {
+  //       logger.info(`Fixed some local url(...) reference in ${cssFile}`);
+  //       fs.writeFileSync(cssFile, fixedCss);
+  //     }
+  //   });
 
   // Create a .gz of each file
   const globOptions = {};
@@ -230,6 +271,8 @@ async function main(url, options, logger) {
       throw er;
     }
     files.forEach(async (filepath) => {
+      if (filepath.endsWith(".woff2")) return;
+
       const content = fs.readFileSync(filepath);
       const compressed = await gzip(content);
       if (compressed.length < content.length) {

@@ -21,7 +21,11 @@ function main(root, options, logger) {
         return;
       }
     }
-    // console.log("MIDDLEARE", req.url);
+    // // Some URLs get wrong, so fake that
+    // if (req.url.includes(root)) {
+
+    // }
+    // console.log("MIDDLEARE", req.url, root, req.url.includes(root));
     next();
   });
 
