@@ -32,16 +32,6 @@ async function downloadAssets(url, folder, logger) {
   await page.setRequestInterception(true);
   const assetsDownloaded = {};
 
-  // page.on("response", async (response) => {
-  //   const url = new URL(response.url());
-  //   let filePath = path.resolve(`./output${url.pathname}`);
-  //   if (path.extname(url.pathname).trim() === "") {
-  //     filePath = `${filePath}/index.html`;
-  //   }
-  //   console.log(filePath);
-  //   logger.info(filePath);
-  //   // await fse.outputFile(filePath, await response.buffer());
-  // });
   page.on("response", async (response) => {
     const responseUrl = response.url();
     const resourceType = response.request().resourceType();
@@ -67,8 +57,6 @@ async function downloadAssets(url, folder, logger) {
     );
   });
   page.on("request", (request) => {
-    // console.log(`Intercepting: ${request.method} ${request.url}`);
-    // logger.info(request.url);
     const skips = [
       "https://www.google-analytics.com",
       "https://cdn.speedcurve.com/",
