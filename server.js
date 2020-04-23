@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const express = require("express");
+const expressStaticGzip = require("express-static-gzip");
 
 function main(root, options, logger) {
   const app = express();
@@ -24,11 +25,14 @@ function main(root, options, logger) {
     next();
   });
 
-  app.use(
-    express.static(root, {
-      // https://expressjs.com/en/4x/api.html#express.static
-    })
-  );
+  // https://www.npmjs.com/package/express-static-gzip
+  app.use("/", expressStaticGzip(root));
+
+  // app.use(
+  //   express.static(root, {
+  //     // https://expressjs.com/en/4x/api.html#express.static
+  //   })
+  // );
 
   app.get("/*", async (req, res) => {
     logger.warn(`Slipped through to catch-all ${req.url}`);

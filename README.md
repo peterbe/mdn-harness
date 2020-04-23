@@ -6,7 +6,6 @@ A CLI to run web performance testing of MDN pages.
 
 MPL-2.0
 
-
 ## Download
 
 Example use:

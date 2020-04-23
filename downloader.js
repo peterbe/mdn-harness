@@ -6,6 +6,8 @@ const { promisify } = require("util");
 const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
+const glob = require("glob");
+const { gzip } = require("node-gzip");
 
 const writeFile = promisify(fs.writeFile);
 const mkdir = promisify(fs.mkdir);
@@ -219,6 +221,32 @@ async function main(url, options, logger) {
         fs.writeFileSync(cssFile, fixedCss);
       }
     });
+
+  // Create a .gz of each file
+  const globOptions = {};
+  glob(path.join(destination, "**/*.*"), globOptions, (er, files) => {
+    if (er) {
+      console.error(er);
+      throw er;
+    }
+    files.forEach(async (filepath) => {
+      const content = fs.readFileSync(filepath);
+      const compressed = await gzip(content);
+      if (compressed.length < content.length) {
+        const newFilepath = filepath + ".gz";
+        fs.writeFileSync(newFilepath, compressed);
+        logger.debug(
+          `Compressed ${filepath} (${showFileSize(filepath)} -> ${showFileSize(
+            newFilepath
+          )} )`
+        );
+      } else {
+        logger.info(
+          `Didn't bother compressing ${filepath} (${showFileSize(filepath)})`
+        );
+      }
+    });
+  });
 
   logger.info("All done! ✨");
 }
