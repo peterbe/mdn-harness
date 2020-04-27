@@ -11,6 +11,23 @@ const cheerio = require("cheerio");
 const Prism = require("prismjs");
 const { gzip } = require("node-gzip");
 
+function getPrismPluginName(classList) {
+  for (let cls of classList) {
+    if (/language-\w+/.test(cls)) {
+      const name = cls.replace(/^language-/, "").trim();
+      if (Prism.languages[name]) {
+        return name;
+      } else {
+        // console.warn(
+        //   `Looks like a syntax highlighting marker but not found as a Prism plugin: ${name}`
+        // );
+      }
+    }
+  }
+  // No good match
+  return null;
+}
+
 async function main(folder, options, logger) {
   logger.info("Running 'ssr-prism'");
 
@@ -18,13 +35,9 @@ async function main(folder, options, logger) {
   const html = fs.readFileSync(htmlFile);
   const $ = cheerio.load(html);
 
-  $("pre").each((i, element) => {
+  $("pre > code").each((i, element) => {
     const $element = $(element);
-    let uri = $element.attr("src");
-    if (uri && uri.includes("bcd-signal")) {
-      console.log(uri);
-      $element.remove();
-    }
+    console.log($element.attr("class"));
   });
 
   let finalHtml = $.html();
