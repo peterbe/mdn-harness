@@ -21,7 +21,7 @@ That should download files in `downloaded/*`
 Example use:
 
 ```bash
-nodemon --unhandled-rejections=strict index.js serve downloaded/en-US_docs_Web_JavaScript_Reference_Global_Objects_Array_forEach
+nodemon --unhandled-rejections=strict index.js serve variants/baseline
 ```
 
 ## Variants
@@ -35,5 +35,20 @@ The all have to be registered in the `variants/index.js` file as
 `module.exports`.
 
 ```bash
-node --unhandled-rejections=strict index.js generate-variants downloaded/en-US_docs_Web_JavaScript_Reference_Global_Objects_Array_forEach
+node --unhandled-rejections=strict index.js generate-variants variants/baseline
+```
+
+## Lighthouse report
+
+Example use:
+
+```bash
+lighthouse-batch -s https://harness.local,https://inlinecss.harness.local --html --params "--only-categories=performance"
+```
+
+then `open report/lighthouse/inlinecss_harness_local.report.html`
+or:
+
+```bash
+cat report/lighthouse/summary.json | jq
 ```

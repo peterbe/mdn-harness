@@ -99,12 +99,14 @@ async function downloadHTML(url) {
 }
 
 async function main(url, options, logger) {
-  const pathname = new URL(url).pathname;
+  // const pathname = new URL(url).pathname;
   const destination = path.join(
     options.output,
-    pathname.slice(1).replace(/\//g, "_")
+    // pathname.slice(1).replace(/\//g, "_")
+    "baseline"
   );
   fs.rmdirSync(destination, { recursive: true });
+  logger.info(`Downloading everything into ${destination}`);
   fs.mkdirSync(destination, { recursive: true });
   const html = await downloadHTML(url, destination, logger);
   const assetsDownloaded = await downloadAssets(url, destination, logger);

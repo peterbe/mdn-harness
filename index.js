@@ -1,3 +1,5 @@
+const path = require("path");
+
 const prog = require("caporal");
 const ncp = require("ncp").ncp;
 
@@ -6,7 +8,7 @@ const { serve } = require("./src/server");
 const variants = require("./src/variants");
 
 const ALL_VARIANTS = Object.keys(variants);
-const DEFAULT_DOWNLOADED_FOLDER = "downloaded";
+const DEFAULT_DOWNLOADED_FOLDER = "variants";
 const DEFAULT_SERVER_PORT = 5000;
 
 prog
@@ -15,7 +17,7 @@ prog
   .argument("<url>", "URL to download")
   .option(
     "--output <folder>",
-    "Folder to put downloads",
+    "Folder to put variants",
     prog.PATH,
     DEFAULT_DOWNLOADED_FOLDER
   )
@@ -48,7 +50,8 @@ prog
     }
 
     for (const variantName of variantsList) {
-      const cloneName = `${args.base}__${variantName}`;
+      // const cloneName = `${args.base}__${variantName}`;
+      const cloneName = path.join(path.dirname(args.base), variantName);
       logger.info(`Cloning ${args.base} to ${cloneName}`);
       // XXX consider ncp.limit if it's important
       // https://www.npmjs.com/package/ncp
