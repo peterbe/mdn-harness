@@ -15,7 +15,7 @@ const cheerio = require("cheerio");
 const { gzip } = require("node-gzip");
 
 async function main(folder, options, logger) {
-  logger.info("Running 'inlinecss'");
+  logger.info("Running 'inlinecss-extreme'");
 
   const server = httpServer.createServer({ root: folder });
   server.listen(8090);
