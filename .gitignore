@@ -1,4 +1,5 @@
 *.pem
 node_modules
-variants/
+/variants
 report/
+sites.txt

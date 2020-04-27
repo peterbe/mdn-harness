@@ -262,6 +262,7 @@ async function main(url, options, logger) {
     }
     files.forEach(async (filepath) => {
       if (filepath.endsWith(".woff2")) return;
+      if (path.basename(filepath).startsWith("_")) return;
 
       const content = fs.readFileSync(filepath);
       const compressed = await gzip(content);

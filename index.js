@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 
 const prog = require("caporal");
@@ -48,21 +49,24 @@ prog
       const trouble = variantsList.find((name) => !ALL_VARIANTS.includes(name));
       throw new Error(`${trouble} is not a recognized variant`);
     }
-
+    if (!variantsList.length) {
+      throw new Error("No variants selected!");
+    }
     for (const variantName of variantsList) {
       // const cloneName = `${args.base}__${variantName}`;
-      const cloneName = path.join(path.dirname(args.base), variantName);
-      logger.info(`Cloning ${args.base} to ${cloneName}`);
+      const clonePath = path.join(path.dirname(args.base), variantName);
+      logger.info(`Cloning ${args.base} to ${clonePath}`);
+      fs.rmdirSync(clonePath, { recursive: true });
       // XXX consider ncp.limit if it's important
       // https://www.npmjs.com/package/ncp
-      ncp(args.base, cloneName, async (err) => {
+      ncp(args.base, clonePath, async (err) => {
         if (err) {
           console.error(err);
           throw err;
         }
         // console.log({ variant });
         const func = variants[variantName].main;
-        await func(cloneName, options, logger);
+        await func(clonePath, options, logger);
       });
     }
     // serve(args.root, options, logger);

@@ -2,8 +2,7 @@
  * Extract all the CSS from any <link rel=stylesheet href=foo.css>
  * and run minimalcss on them, combined, and inject that as a
  * big <style> block.
- * And for each <link> tag we did this on set the media to `print`
- * and add `onload="this.media='all'"`
+ * But also, delete all the <link> tags which we were able to do this on.
  */
 
 const fs = require("fs");
@@ -19,14 +18,14 @@ async function main(folder, options, logger) {
   logger.info("Running 'inlinecss'");
 
   const server = httpServer.createServer({ root: folder });
-  server.listen(8080);
+  server.listen(8090);
 
   const browser = await puppeteer.launch();
 
   let result;
   try {
     result = await minimalcss.minimize({
-      urls: ["http://0.0.0.0:8080/index.html"],
+      urls: ["http://0.0.0.0:8090/index.html"],
       browser,
     });
   } catch (err) {
@@ -51,21 +50,13 @@ async function main(folder, options, logger) {
       !$element.attr("media") &&
       stylesheetsFound.includes($element.attr("href"))
     ) {
-      $element.attr("media", "print");
-      $element.attr("onload", "this.media='all'");
-      logger.info(
-        `Replaced linked stylesheet ${$element.attr("href")} with inline style`
-      );
+      $element.remove();
+      logger.info(`Remove linked stylesheet ${$element.attr("href")}`);
     }
   });
   $("head").append($("<style>").text(result.finalCss));
 
   let finalHtml = $.html();
-  // Hack around cheerio
-  finalHtml = finalHtml.replace(
-    /onload="this.media=&apos;all&apos;"/g,
-    `onload="this.media='all'"`
-  );
   fs.writeFileSync(htmlFile, finalHtml);
   const compressed = await gzip(finalHtml);
   fs.writeFileSync(htmlFile + ".gz", compressed);
