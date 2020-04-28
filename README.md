@@ -85,4 +85,4 @@ AWS CloudFront instances set up for the current variants it can generate:
 * [nobcdsignalling](https://d3ohduisxjll24.cloudfront.net/index.html)
 * [ssrprism](https://d1ca36dt8e8ima.cloudfront.net/index.html)
 * [inlinecssextreme](https://d1jqaxyu5i06vi.cloudfront.net/index.html)
-* [lazyloadiframe](dzyoyiq5bbseg.cloudfront.net)
+* [lazyloadiframe](https://dzyoyiq5bbseg.cloudfront.net/index.html)
