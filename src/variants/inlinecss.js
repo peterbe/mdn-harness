@@ -67,8 +67,10 @@ async function main(folder, options, logger) {
     `onload="this.media='all'"`
   );
   fs.writeFileSync(htmlFile, finalHtml);
-  const compressed = await gzip(finalHtml);
-  fs.writeFileSync(htmlFile + ".gz", compressed);
+  if (fs.existsSync(htmlFile + ".gz")) {
+    const compressed = await gzip(finalHtml);
+    fs.writeFileSync(htmlFile + ".gz", compressed);
+  }
 }
 
 module.exports = {

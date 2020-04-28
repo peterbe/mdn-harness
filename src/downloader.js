@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-// const url_package = require("url");
 const { promisify } = require("util");
 
 const fetch = require("node-fetch");
@@ -77,13 +76,9 @@ async function downloadAssets(url, folder, logger) {
   // await page.goto(url, { waitUntil: "load" });
   await page.goto(url, { waitUntil: "networkidle0" });
 
-  //const title = await page.title();
-  //console.log(title);
-  const screenshotPath = path.join(folder, "screenshot.png");
+  const screenshotPath = path.join(folder, "_screenshot.png");
   await page.screenshot({ path: screenshotPath, fullPage: true });
   logger.info(`Screenshot saved: ${screenshotPath}`);
-  // const html = await page.content();
-  // console.log(html);
 
   browser.close();
   return assetsDownloaded;
@@ -121,35 +116,6 @@ async function main(url, options, logger) {
     return null;
   }
 
-  function fixCSS(css) {
-    function replacer(match, uri) {
-      if (uri.startsWith("data:image")) return match;
-
-      if (match.includes("dino-happy")) {
-        console.log("WHAT!!!!", match, uri);
-      }
-
-      const absoluteUri = new URL(uri, url).toString();
-      const savedPath = assetsDownloaded[absoluteUri];
-      if (match.includes("dino-happy")) {
-        console.log({ savedPath }, "FIXED:", match.replace(uri, savedPath));
-      }
-      if (savedPath) {
-        logger.info(
-          `Fixed CSS URL ${uri} (in ${match}) BECAME ${match.replace(
-            uri,
-            savedPath
-          )}`
-        );
-        // return match;
-        return match.replace(uri, savedPath);
-      }
-      logger.info(`BAIL on CSS URL ${uri} (in ${match})`);
-      return match;
-    }
-    return css.replace(/url\(["']?(.*?)["']?\)/g, replacer);
-  }
-
   const $ = cheerio.load(html);
 
   // puppeteer doesn't download the favicons, so deal with that manually.
@@ -170,35 +136,6 @@ async function main(url, options, logger) {
     }
   );
 
-  // $("script,link,img,iframe").each((i, element) => {
-  //   const $element = $(element);
-  //   let uri;
-  //   if (
-  //     element.tagName === "script" ||
-  //     element.tagName === "image" ||
-  //     element.tagName === "iframe"
-  //   ) {
-  //     uri = $element.attr("src");
-  //     if (uri) {
-  //       const savedPath = getDownloadedAsset(uri);
-  //       if (savedPath) {
-  //         $element.attr("src", savedPath);
-  //         logger.info(`Changed HTML for ${uri}`);
-  //       }
-  //     }
-  //   } else if (element.tagName === "link") {
-  //     uri = $element.attr("href");
-  //     if (uri) {
-  //       const savedPath = getDownloadedAsset(uri);
-  //       if (savedPath) {
-  //         $element.attr("href", savedPath);
-  //         logger.info(`Changed HTML for ${uri}`);
-  //       }
-  //     }
-  //   } else {
-  //     throw new Error(`DON'T KNOW HOW TO DEAL WITH '${element.tagName}'!`);
-  //   }
-  // });
   $("iframe").each((i, element) => {
     const $element = $(element);
     let uri;
@@ -212,28 +149,6 @@ async function main(url, options, logger) {
     }
   });
 
-  // $("style").each((i, element) => {
-  //   // Need to fix all inline stylesheets that might look something
-  //   // like this:
-  //   //
-  //   //    @font-face {
-  //   //      font-family: zillaslab;
-  //   //      font-display: swap;
-  //   //      src: url(/static/fonts/locales/ZillaSlab-Regular.subset.bbc33fb47cf6.woff2) format('woff2'),
-  //   //           url(/static/fonts/locales/ZillaSlab-Regular.subset.0357f12613a7.woff) format('woff');
-  //   //
-  //   const $element = $(element);
-  //   const initialCss = $element.text();
-  //   const fixedCss = fixCSS(initialCss);
-  //   if (fixedCss !== initialCss) {
-  //     console.log("CSS BEFORE_______________________________________");
-  //     console.log(initialCss);
-  //     console.log("CSS AFTER_______________________________________");
-  //     console.log(fixedCss);
-  //     console.log("\n");
-  //     $element.text(fixedCss);
-  //   }
-  // });
   const htmlFile = path.join(destination, "index.html");
   fs.writeFileSync(htmlFile, $.html());
   logger.info(`Downloaded ${htmlFile} (${showFileSize(htmlFile)})`);
@@ -242,45 +157,36 @@ async function main(url, options, logger) {
   fs.writeFileSync(assetsFile, JSON.stringify(assetsDownloaded, null, 2));
   logger.info(`Record of all downloaded assets in ${assetsFile}`);
 
-  // Object.values(assetsDownloaded)
-  //   .filter((v) => path.basename(v).endsWith(".css"))
-  //   .forEach((cssFile) => {
-  //     const initialCss = fs.readFileSync(cssFile, "utf8");
-  //     const fixedCss = fixCSS(initialCss);
-  //     if (fixedCss !== initialCss) {
-  //       logger.info(`Fixed some local url(...) reference in ${cssFile}`);
-  //       fs.writeFileSync(cssFile, fixedCss);
-  //     }
-  //   });
-
   // Create a .gz of each file
-  const globOptions = {};
-  glob(path.join(destination, "**/*.*"), globOptions, (er, files) => {
-    if (er) {
-      console.error(er);
-      throw er;
-    }
-    files.forEach(async (filepath) => {
-      if (filepath.endsWith(".woff2")) return;
-      if (path.basename(filepath).startsWith("_")) return;
-
-      const content = fs.readFileSync(filepath);
-      const compressed = await gzip(content);
-      if (compressed.length < content.length) {
-        const newFilepath = filepath + ".gz";
-        fs.writeFileSync(newFilepath, compressed);
-        logger.debug(
-          `Compressed ${filepath} (${showFileSize(filepath)} -> ${showFileSize(
-            newFilepath
-          )} )`
-        );
-      } else {
-        logger.info(
-          `Didn't bother compressing ${filepath} (${showFileSize(filepath)})`
-        );
+  if (options.gzip) {
+    const globOptions = {};
+    glob(path.join(destination, "**/*.*"), globOptions, (er, files) => {
+      if (er) {
+        console.error(er);
+        throw er;
       }
+      files.forEach(async (filepath) => {
+        if (filepath.endsWith(".woff2")) return;
+        if (path.basename(filepath).startsWith("_")) return;
+
+        const content = fs.readFileSync(filepath);
+        const compressed = await gzip(content);
+        if (compressed.length < content.length) {
+          const newFilepath = filepath + ".gz";
+          fs.writeFileSync(newFilepath, compressed);
+          logger.debug(
+            `Compressed ${filepath} (${showFileSize(
+              filepath
+            )} -> ${showFileSize(newFilepath)} )`
+          );
+        } else {
+          logger.info(
+            `Didn't bother compressing ${filepath} (${showFileSize(filepath)})`
+          );
+        }
+      });
     });
-  });
+  }
 
   logger.info("All done! ✨");
 }

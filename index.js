@@ -6,6 +6,7 @@ const ncp = require("ncp").ncp;
 
 const { download } = require("./src/downloader");
 const { serve } = require("./src/server");
+const cloudfronts = require("./src/cloudfronts");
 const variants = require("./src/variants");
 
 const ALL_VARIANTS = Object.keys(variants);
@@ -22,9 +23,8 @@ prog
     prog.PATH,
     DEFAULT_DOWNLOADED_FOLDER
   )
+  .option("--gzip", "Created .gz for each file downloaded", prog.BOOL, false)
   .action(async function (args, options, logger) {
-    // console.log(args);
-    // console.log(options);
     download(args.url, options, logger);
   })
 
@@ -53,7 +53,6 @@ prog
       throw new Error("No variants selected!");
     }
     for (const variantName of variantsList) {
-      // const cloneName = `${args.base}__${variantName}`;
       const clonePath = path.join(path.dirname(args.base), variantName);
       logger.info(`Cloning ${args.base} to ${clonePath}`);
       fs.rmdirSync(clonePath, { recursive: true });
@@ -64,12 +63,23 @@ prog
           console.error(err);
           throw err;
         }
-        // console.log({ variant });
         const func = variants[variantName].main;
         await func(clonePath, options, logger);
       });
     }
-    // serve(args.root, options, logger);
+  })
+
+  .command("check-cloudfronts", "Make sure the assets are loading")
+  .argument(
+    "[configfile]",
+    "JSON config file mapping domain to folder",
+    prog.PATH,
+    "cloudfronts.json"
+  )
+  .option("--filter <string>", "Filters to search", prog.ARRAY, [])
+  .option("--max-urls <number>", "Max. URLs to check per domain", prog.INT, 100)
+  .action(async function (args, options, logger) {
+    cloudfronts.main(args.configfile, options, logger);
   });
 
 prog.parse(process.argv);

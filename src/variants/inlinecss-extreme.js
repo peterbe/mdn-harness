@@ -58,8 +58,10 @@ async function main(folder, options, logger) {
 
   let finalHtml = $.html();
   fs.writeFileSync(htmlFile, finalHtml);
-  const compressed = await gzip(finalHtml);
-  fs.writeFileSync(htmlFile + ".gz", compressed);
+  if (fs.existsSync(htmlFile + ".gz")) {
+    const compressed = await gzip(finalHtml);
+    fs.writeFileSync(htmlFile + ".gz", compressed);
+  }
 }
 
 module.exports = {

@@ -11,23 +11,6 @@ const cheerio = require("cheerio");
 const Prism = require("prismjs");
 const { gzip } = require("node-gzip");
 
-// function getPrismPluginName(classList) {
-//   for (let cls of classList) {
-//     if (/language-\w+/.test(cls)) {
-//       const name = cls.replace(/^language-/, "").trim();
-//       if (Prism.languages[name]) {
-//         return name;
-//       } else {
-//         // console.warn(
-//         //   `Looks like a syntax highlighting marker but not found as a Prism plugin: ${name}`
-//         // );
-//       }
-//     }
-//   }
-//   // No good match
-//   return null;
-// }
-
 async function main(folder, options, logger) {
   logger.info("Running 'ssr-prism'");
 
@@ -62,8 +45,10 @@ async function main(folder, options, logger) {
 
   let finalHtml = $.html();
   fs.writeFileSync(htmlFile, finalHtml);
-  const compressed = await gzip(finalHtml);
-  fs.writeFileSync(htmlFile + ".gz", compressed);
+  if (fs.existsSync(htmlFile + ".gz")) {
+    const compressed = await gzip(finalHtml);
+    fs.writeFileSync(htmlFile + ".gz", compressed);
+  }
 }
 
 module.exports = {

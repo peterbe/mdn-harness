@@ -11,7 +11,7 @@ MPL-2.0
 Example use:
 
 ```bash
-node --unhandled-rejections=strict index.js download https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+yarn run download https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 ```
 
 That should download files in `downloaded/*`
@@ -35,15 +35,21 @@ The all have to be registered in the `variants/index.js` file as
 `module.exports`.
 
 ```bash
-node --unhandled-rejections=strict index.js generate-variants variants/baseline
+yarn run generate-variants variants/baseline
 ```
 
 ## Lighthouse report
 
-Example use:
+Pure `lighthouse`:
 
 ```bash
-lighthouse-batch -f sites.txt --html --params "--only-categories=performance  --throttling.cpuSlowdownMultiplier=6"
+lighthouse https://harness.local --preset perf --throttling.cpuSlowdownMultiplier=6 --chrome-flags="--headless"
+```
+
+Or, using `lighthouse-batch`:
+
+```bash
+lighthouse-batch -f sites.txt --html --params "--only-categories=performance --preset perf --throttling.cpuSlowdownMultiplier=6"
 ```
 
 then `open report/lighthouse/inlinecss_harness_local.report.html`
@@ -51,4 +57,12 @@ or:
 
 ```bash
 cat report/lighthouse/summary.json | jq
+```
+
+## S3 uploading
+
+Standing in the root directory:
+
+```bash
+s3cmd put --acl-public --recursive --guess-mime-type variants s3://peterbe-mdn-harness/
 ```
