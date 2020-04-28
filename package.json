@@ -14,7 +14,7 @@
     "express": "4.17.1",
     "express-static-gzip": "2.0.6",
     "glob": "7.1.6",
-    "http-server": "0.12.1",
+    "http-server": "0.12.3",
     "lighthouse-batch": "5.0.2",
     "minimalcss": "0.9.0",
     "ncp": "2.0.0",
@@ -22,6 +22,6 @@
     "node-gzip": "1.1.2",
     "nodemon": "2.0.3",
     "prismjs": "1.20.0",
-    "puppeteer": "3.0.1"
+    "puppeteer": "3.0.2"
   }
 }

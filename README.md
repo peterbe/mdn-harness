@@ -43,7 +43,7 @@ node --unhandled-rejections=strict index.js generate-variants variants/baseline
 Example use:
 
 ```bash
-lighthouse-batch -f sites.txt --html --params "--only-categories=performance"
+lighthouse-batch -f sites.txt --html --params "--only-categories=performance  --throttling.cpuSlowdownMultiplier=6"
 ```
 
 then `open report/lighthouse/inlinecss_harness_local.report.html`
