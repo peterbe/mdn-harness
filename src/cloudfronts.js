@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const glob = require("glob");
 
 async function main(configfile, options, logger) {
-  const config = JSON.parse(fs.readFileSync(configfile));
+  const config = JSON.parse(fs.readFileSync(configfile, "utf-8"));
   const entries = Object.entries(config).filter(([domain, folder]) => {
     if (options.filter && options.filter.length) {
       return options.filter.some(
@@ -25,20 +25,26 @@ async function main(configfile, options, logger) {
     return true;
   }
 
-  async function testUrls(urls) {
+  async function testUrls(allUrls, limit, done) {
+    if (limit > allUrls.length) {
+      console.warn(`No point limiting. There are only ${allUrls.length} URLs`);
+    }
+    const urls = allUrls.slice(0, limit);
     const len = urls.length;
-    const done = [];
+    const run = [];
     const promises = urls.map(async (url, i) => {
       const response = await fetch(url);
       const xCache = response.headers.get("x-cache");
       const contentType = response.headers.get("content-type");
 
       logger.info(
-        `${((100 * done.length) / len).toFixed(0).padStart(3)}%  ${url.padEnd(
-          100
-        )}${response.status} ${xCache.padEnd(10)} (${contentType})`
+        `${((100 * (run.length + 1)) / len)
+          .toFixed(0)
+          .padStart(3)}%  ${url.padEnd(110)}${response.status} ${xCache.padEnd(
+          10
+        )} (${contentType})`
       );
-      done.push(url);
+      run.push(url);
       return { xCache, contentType };
     });
     const values = await Promise.all(promises);
@@ -55,27 +61,60 @@ async function main(configfile, options, logger) {
     }
     console.log(`Hits:   ${((100 * hits) / attempts).toFixed(1)}%`);
     console.log(`Misses: ${((100 * misses) / attempts).toFixed(1)}%`);
+    console.log("");
+    done();
   }
 
-  for (const [domain, folder] of entries) {
-    const urls = [];
+  function testDomain(domain, folder, done) {
     console.log(`Domain: ${domain} \tFolder: ${folder}`);
     const globOptions = {};
+    const urls = [];
     glob(path.join(folder, "**/*.*"), globOptions, (er, files) => {
       if (er) {
         console.error(er);
         throw er;
       }
-      files.filter(filterFilepath).forEach(async (filepath) => {
+      files.filter(filterFilepath).forEach((filepath) => {
         const url = `https://${domain}/${path.relative(folder, filepath)}`;
         urls.push(url);
       });
       urls.sort(() => Math.random() - 0.5);
-      console.log(`${urls.length} URLs`);
-
-      testUrls(urls.slice(0, options.maxUrls));
+      testUrls(urls, options.maxUrls, done);
     });
   }
+
+  function recurse() {
+    let next = entries.pop();
+    if (!next) return;
+    const [domain, folder] = next;
+    testDomain(domain, folder, recurse);
+  }
+  recurse();
+  // let next = entries.pop();
+  // const [domain, folder] = next;
+
+  // while (([domain, folder] = entries.pop())) {
+  //   console.log({ domain, folder });
+  // }
+  // console.log(entries);
+
+  // for await (const [domain, folder] of entries) {
+  //   const urls = [];
+  //   console.log(`Domain: ${domain} \tFolder: ${folder}`);
+  //   const globOptions = {};
+  //   glob(path.join(folder, "**/*.*"), globOptions, (er, files) => {
+  //     if (er) {
+  //       console.error(er);
+  //       throw er;
+  //     }
+  //     files.filter(filterFilepath).forEach((filepath) => {
+  //       const url = `https://${domain}/${path.relative(folder, filepath)}`;
+  //       urls.push(url);
+  //     });
+  //     urls.sort(() => Math.random() - 0.5);
+  //     testUrls(urls, options.maxUrls);
+  //   });
+  // }
   //   logger.info("All done! ✨");
 }
 

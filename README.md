@@ -59,10 +59,18 @@ or:
 cat report/lighthouse/summary.json | jq
 ```
 
+### Tip: Checking your sites .txt file
+
+To make sure that every URL in your .txt file works you can use:
+
+```bash
+cat cloudfront-sites.txt | xargs curl -I
+```
+
 ## S3 uploading
 
 Standing in the root directory:
 
 ```bash
-s3cmd put --acl-public --recursive --guess-mime-type variants s3://peterbe-mdn-harness/
+s3cmd put --acl-public --recursive --no-mime-magic --guess-mime-type variants s3://peterbe-mdn-harness/
 ```
