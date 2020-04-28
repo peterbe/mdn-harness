@@ -74,3 +74,15 @@ Standing in the root directory:
 ```bash
 s3cmd put --acl-public --recursive --no-mime-magic --guess-mime-type variants s3://peterbe-mdn-harness/
 ```
+
+## Current variants
+
+This isn't really part of the source code but here's a list of
+AWS CloudFront instances set up for the current variants it can generate:
+
+* [baseline](https://d2fm08353pu8pw.cloudfront.net/index.html)
+* [inlinecss](https://d2um11o9s382bw.cloudfront.net/index.html)
+* [nobcdsignalling](https://d3ohduisxjll24.cloudfront.net/index.html)
+* [ssrprism](https://d1ca36dt8e8ima.cloudfront.net/index.html)
+* [inlinecssextreme](https://d1jqaxyu5i06vi.cloudfront.net/index.html)
+* [lazyloadiframe](dzyoyiq5bbseg.cloudfront.net)
