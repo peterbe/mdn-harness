@@ -62,7 +62,7 @@ async function main(configfile, options, logger) {
     console.log(`Hits:   ${((100 * hits) / attempts).toFixed(1)}%`);
     console.log(`Misses: ${((100 * misses) / attempts).toFixed(1)}%`);
     console.log("");
-    done();
+    done(hits / attempts);
   }
 
   function testDomain(domain, folder, done) {
@@ -83,39 +83,23 @@ async function main(configfile, options, logger) {
     });
   }
 
+  let allHitRatios = [];
   function recurse() {
     let next = entries.pop();
-    if (!next) return;
+    if (!next) {
+      console.log("ALL DONE!");
+      const average =
+        allHitRatios.reduce((a, b) => a + b, 0) / allHitRatios.length;
+      console.log(`  average hit ratio: ${(100 * average).toFixed(1)}%`);
+      return;
+    }
     const [domain, folder] = next;
-    testDomain(domain, folder, recurse);
+    testDomain(domain, folder, (hitRatio) => {
+      allHitRatios.push(hitRatio);
+      recurse();
+    });
   }
   recurse();
-  // let next = entries.pop();
-  // const [domain, folder] = next;
-
-  // while (([domain, folder] = entries.pop())) {
-  //   console.log({ domain, folder });
-  // }
-  // console.log(entries);
-
-  // for await (const [domain, folder] of entries) {
-  //   const urls = [];
-  //   console.log(`Domain: ${domain} \tFolder: ${folder}`);
-  //   const globOptions = {};
-  //   glob(path.join(folder, "**/*.*"), globOptions, (er, files) => {
-  //     if (er) {
-  //       console.error(er);
-  //       throw er;
-  //     }
-  //     files.filter(filterFilepath).forEach((filepath) => {
-  //       const url = `https://${domain}/${path.relative(folder, filepath)}`;
-  //       urls.push(url);
-  //     });
-  //     urls.sort(() => Math.random() - 0.5);
-  //     testUrls(urls, options.maxUrls);
-  //   });
-  // }
-  //   logger.info("All done! ✨");
 }
 
 module.exports = {
