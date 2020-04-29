@@ -36,13 +36,14 @@ async function main(configfile, options, logger) {
       const response = await fetch(url);
       const xCache = response.headers.get("x-cache");
       const contentType = response.headers.get("content-type");
+      const cacheControl = response.headers.get("cache-control");
 
       logger.info(
         `${((100 * (run.length + 1)) / len)
           .toFixed(0)
           .padStart(3)}%  ${url.padEnd(110)}${response.status} ${xCache.padEnd(
           10
-        )} (${contentType})`
+        )} (${contentType}, ${cacheControl})`
       );
       run.push(url);
       return { xCache, contentType };

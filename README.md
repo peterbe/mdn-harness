@@ -72,7 +72,7 @@ cat cloudfront-sites.txt | xargs curl -I
 Standing in the root directory:
 
 ```bash
-s3cmd put --acl-public --recursive --no-mime-magic --guess-mime-type variants s3://peterbe-mdn-harness/
+s3cmd put --add-header="Cache-Control:max-age=86400,public" --acl-public --recursive --no-mime-magic --guess-mime-type variants s3://peterbe-mdn-harness/
 ```
 
 ## Current variants
