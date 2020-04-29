@@ -6,7 +6,8 @@
   "scripts": {
     "download": "node --unhandled-rejections=strict index.js download",
     "generate-variants": "node --unhandled-rejections=strict index.js generate-variants",
-    "check-cloudfronts": "node --unhandled-rejections=strict index.js check-cloudfronts"
+    "check-cloudfronts": "node --unhandled-rejections=strict index.js check-cloudfronts",
+    "merge-summaries": "node --unhandled-rejections=strict index.js merge-summaries"
   },
   "dependencies": {
     "caporal": "1.3.0",

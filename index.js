@@ -7,6 +7,7 @@ const ncp = require("ncp").ncp;
 const { download } = require("./src/downloader");
 const { serve } = require("./src/server");
 const cloudfronts = require("./src/cloudfronts");
+const mergesummaries = require("./src/merge-summaries");
 const variants = require("./src/variants");
 
 const ALL_VARIANTS = Object.keys(variants);
@@ -80,6 +81,20 @@ prog
   .option("--max-urls <number>", "Max. URLs to check per domain", prog.INT, 100)
   .action(async function (args, options, logger) {
     cloudfronts.main(args.configfile, options, logger);
+  })
+
+  .command(
+    "merge-summaries",
+    "Take one lighthouse summary and make it multiple"
+  )
+  .argument(
+    "[summaryfile]",
+    "JSON summary file made from lighthouse",
+    prog.PATH,
+    "report/lighthouse/summary.json"
+  )
+  .action(async function (args, options, logger) {
+    mergesummaries.main(args.summaryfile, options, logger);
   });
 
 prog.parse(process.argv);
