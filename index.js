@@ -5,14 +5,12 @@ const prog = require("caporal");
 const ncp = require("ncp").ncp;
 
 const { download } = require("./src/downloader");
-const { serve } = require("./src/server");
 const cloudfronts = require("./src/cloudfronts");
 const mergesummaries = require("./src/merge-summaries");
 const variants = require("./src/variants");
 
 const ALL_VARIANTS = Object.keys(variants);
 const DEFAULT_DOWNLOADED_FOLDER = "variants";
-const DEFAULT_SERVER_PORT = 5000;
 
 prog
   .version("1.0.0")
@@ -27,18 +25,6 @@ prog
   .option("--gzip", "Created .gz for each file downloaded", prog.BOOL, false)
   .action(async function (args, options, logger) {
     download(args.url, options, logger);
-  })
-
-  .command("serve", "Static serve a whole directory")
-  .argument("<root>", "Root folder")
-  .option(
-    "--port <number>",
-    "Folder to put downloads",
-    prog.INTEGER,
-    DEFAULT_SERVER_PORT
-  )
-  .action(async function (args, options, logger) {
-    serve(args.root, options, logger);
   })
 
   .command("generate-variants", "Static serve a whole directory")

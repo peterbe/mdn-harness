@@ -16,14 +16,6 @@ yarn run download https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refere
 
 That should download files in `downloaded/*`
 
-## Server
-
-Example use:
-
-```bash
-nodemon --unhandled-rejections=strict index.js serve variants/baseline
-```
-
 ## Variants
 
 A variant is an optimization attempt. E.g. "Replace all SVGs with WebP".
