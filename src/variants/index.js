@@ -5,6 +5,7 @@ const ssrprism = require("./ssr-prism");
 const lazyloadiframe = require("./lazyload-iframe");
 const noreact = require("./no-react");
 const inlinecssiframe = require("./inlinecss-iframe");
+const nodatauris = require("./no-data-uris");
 
 module.exports = {
   inlinecss,
@@ -14,4 +15,5 @@ module.exports = {
   lazyloadiframe,
   noreact,
   inlinecssiframe,
+  nodatauris,
 };
