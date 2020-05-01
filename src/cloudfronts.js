@@ -37,13 +37,17 @@ async function main(configfile, options, logger) {
       const xCache = response.headers.get("x-cache");
       const contentType = response.headers.get("content-type");
       const cacheControl = response.headers.get("cache-control");
+      const contentEncoding = response.headers.get("content-encoding");
 
+      const xCacheShort = xCache.split(/\s/)[0];
       logger.info(
         `${((100 * (run.length + 1)) / len)
           .toFixed(0)
-          .padStart(3)}%  ${url.padEnd(110)}${response.status} ${xCache.padEnd(
+          .padStart(3)}%  ${url.padEnd(110)}${
+          response.status
+        } ${xCacheShort.padEnd(
           10
-        )} (${contentType}, ${cacheControl})`
+        )} (${contentType}, ${cacheControl}, ${contentEncoding})`
       );
       run.push(url);
       return { xCache, contentType };
