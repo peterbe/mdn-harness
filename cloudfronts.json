@@ -8,5 +8,6 @@
   "d1cap84gly6pqw.cloudfront.net": "variants/noreact",
   "d29rjqiwb8121o.cloudfront.net": "variants/inlinecssiframe",
   "d10c3grr2u9svt.cloudfront.net": "variants/nodatauris",
-  "dwxglarcs6oiy.cloudfront.net": "variants/noiframe"
+  "dwxglarcs6oiy.cloudfront.net": "variants/noiframe",
+  "dsxk913f42qzd.cloudfront.net": "variants/linkcriticalcss"
 }

@@ -82,3 +82,4 @@ AWS CloudFront instances set up for the current variants it can generate:
 * [inlinecssiframe](https://d29rjqiwb8121o.cloudfront.net/index.html)
 * [nodatauris](https://d10c3grr2u9svt.cloudfront.net/index.html)
 * [noiframe](https://dwxglarcs6oiy.cloudfront.net/index.html)
+* [linkcriticalcss](https://dsxk913f42qzd.cloudfront.net/index.html)
