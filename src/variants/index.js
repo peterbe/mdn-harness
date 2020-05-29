@@ -8,6 +8,7 @@ const inlinecssiframe = require("./inlinecss-iframe");
 const nodatauris = require("./no-data-uris");
 const noiframe = require("./no-iframe");
 const linkcriticalcss = require("./link-critical-css");
+const simpleinlinecsssome = require("./simpleinlinecss-some");
 
 module.exports = {
   inlinecss,
@@ -20,4 +21,5 @@ module.exports = {
   nodatauris,
   noiframe,
   linkcriticalcss,
+  simpleinlinecsssome,
 };
